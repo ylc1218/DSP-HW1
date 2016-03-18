@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 #include "hmm.h"
-#define MAX_TIME 55
 HMM hmm;
 
 /*
@@ -20,32 +19,31 @@ void trainHmm(char* seq_model){
     FILE *fp = open_or_die(seq_model, "r");
 
     char seq[MAX_TIME];
-    int state_num = hmm.state_num;
-    double gamma[MAX_TIME][state_num];
+    int state_num = hmm.state_num, obsv_num = hmm.observ_num;
+    double gamma[MAX_TIME][state_num], obsv_gamma[obsv_num][state_num];
     double epsilon[state_num][state_num];
 
     memset(gamma, 0, sizeof(gamma));
+    memset(obsv_gamma, 0, sizeof(obsv_gamma));
     memset(epsilon, 0, sizeof(epsilon));
 
     int N=0, T;
-    while(fscanf(fp, "%s", seq)>0){
-        T = strlen(seq);
+    while(fgets(seq, MAX_TIME, fp)>0){
+        T = strlen(seq)-1;
         N++;
-
+        for(int t=0;t<T;t++) seq[t] -= 'A';
         //calculate alpha
         double alpha[T][state_num];
-        for(int s=0;s<state_num;s++){ //initial alpha
-            alpha[0][s] = hmm.initial[s]*hmm.observation[seq[0]-'A'][s];
-        }
+        for(int s=0;s<state_num;s++) //initial alpha
+            alpha[0][s] = hmm.initial[s]*hmm.observation[seq[0]][s];
 
         for(int t=1;t<T;t++){ //forward: for each time slice
-            int obsv = seq[t]-'A'; //observation at time t
             for(int s=0;s<state_num;s++){ //for each current state
                 alpha[t][s] = 0;
                 for(int ps=0;ps<state_num;ps++){ //for each previous state
                     alpha[t][s] += alpha[t-1][ps]*hmm.transition[ps][s];
                 }
-                alpha[t][s] *= hmm.observation[obsv][s];
+                alpha[t][s] *= hmm.observation[seq[t]][s];
             }
         }
 
@@ -54,28 +52,30 @@ void trainHmm(char* seq_model){
         for(int s=0;s<state_num;s++) beta[T-1][s] = 1; //initial beta
 
         for(int t=T-2;t>=0;t--){//backward: for each time slice
-            int obsv = seq[t+1]-'A'; //observation at time t+1
             for(int s=0;s<state_num;s++){ //for each current state
                 beta[t][s] = 0;
                 for(int ns=0;ns<state_num;ns++) // for each next state
-                    beta[t][s] += hmm.transition[s][ns]*hmm.observation[obsv][ns]*beta[t+1][ns];
+                    beta[t][s] += hmm.transition[s][ns]*hmm.observation[seq[t+1]][ns]*beta[t+1][ns];
             }
         }
 
         //calculate gamma and epsilon
         for(int t=0;t<T;t++){
-            double sum = 0;
-            int obsv = seq[t]-'A';
-            for(int s=0;s<state_num;s++) sum += alpha[t][s]*beta[t][s];
-            //printf("%d:sum = %lf\n", t, sum);
+            double sumArr[state_num], sum = 0;
+            for(int s=0;s<state_num;s++){
+                sumArr[s] = alpha[t][s]*beta[t][s];
+                sum += sumArr[s];
+            }
+
             for(int s=0;s<state_num;s++){
                 //calculate gamma
-                gamma[t][s] += alpha[t][s]*beta[t][s]/sum;
+                gamma[t][s] += sumArr[s]/sum;
+                obsv_gamma[seq[t]][s] += sumArr[s]/sum;
                    
                 //calculate epsilon
                 if(t==T-1) continue;
                 for(int ns=0;ns<state_num;ns++)
-                    epsilon[s][ns] += alpha[t][s]*hmm.transition[s][ns]*hmm.observation[obsv][ns]*beta[t+1][ns]/sum;
+                    epsilon[s][ns] += (alpha[t][s]*hmm.transition[s][ns]*hmm.observation[seq[t+1]][ns]*beta[t+1][ns])/sum;
             }
         }
     }
@@ -94,12 +94,11 @@ void trainHmm(char* seq_model){
     }
 
     //update observation(B)
-    for(int obsv=0;obsv<hmm.observ_num;obsv++){
+    for(int obsv=0;obsv<obsv_num;obsv++){
         for(int s=0;s<state_num;s++){
-            double gamma_sum = 0, obsv_gamma_sum = 0;
-            for(int t=0;t<T;t++){
-                gamma_sum += gamma[t][s];
-            }
+            double gamma_sum = 0;
+            for(int t=0;t<T;t++) gamma_sum += gamma[t][s];
+            hmm.observation[obsv][s] = obsv_gamma[obsv][s]/gamma_sum;
         }
     }
 }
@@ -121,7 +120,7 @@ int main(int argc, char** argv){
     for(int i=0;i<itr;i++) trainHmm(seq_model);
 
     FILE *fp_out = open_or_die(out_txt, "w");
-    dumpHMM(fp_out, &hmm );
+    dumpHMM(fp_out, &hmm);
     fclose(fp_out);
 
     return 0;

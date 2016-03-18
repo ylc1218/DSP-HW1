@@ -22,6 +22,10 @@
 #	define MAX_LINE 	256
 #endif
 
+#ifndef MAX_TIME
+#  define MAX_TIME   55
+#endif
+
 typedef struct{
    char *model_name;
    int state_num;					//number of state
@@ -110,6 +114,7 @@ static int load_models( const char *listname, HMM *hmm, const int max_num )
    int count = 0;
    char filename[MAX_LINE] = "";
    while( fscanf(fp, "%s", filename) == 1 ){
+      fprintf(stderr, "loading model %s\n", filename);
       loadHMM( &hmm[count], filename );
       count ++;
 
