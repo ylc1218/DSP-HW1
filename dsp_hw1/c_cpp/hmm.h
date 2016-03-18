@@ -35,7 +35,7 @@ static FILE *open_or_die( const char *filename, const char *ht )
 {
    FILE *fp = fopen( filename, ht );
    if( fp == NULL ){
-      perror( filename);
+      perror(filename);
       exit(1);
    }
 
@@ -81,7 +81,6 @@ static void loadHMM( HMM *hmm, const char *filename )
 static void dumpHMM( FILE *fp, HMM *hmm )
 {
    int i, j;
-
    //fprintf( fp, "model name: %s\n", hmm->model_name );
    fprintf( fp, "initial: %d\n", hmm->state_num );
    for( i = 0 ; i < hmm->state_num - 1; i++ )
@@ -101,6 +100,7 @@ static void dumpHMM( FILE *fp, HMM *hmm )
          fprintf( fp, "%.5lf ", hmm->observation[i][j] );
       fprintf(fp,"%.5lf\n", hmm->observation[i][hmm->state_num - 1]);
    }
+   fflush(fp);
 }
 
 static int load_models( const char *listname, HMM *hmm, const int max_num )
