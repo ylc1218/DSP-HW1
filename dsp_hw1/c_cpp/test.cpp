@@ -63,7 +63,7 @@ void testHMM(char *test_txt, char *result_txt){
 
 int main(int argc, char** argv){
     if(argc!=4){
-        fprintf(stderr, "Error: Need 4 arguments (modellist.txt  testing_data.txt  result.txt).\n");
+        fprintf(stderr, "Error: Need 3 arguments (modellist.txt  testing_data.txt  result.txt).\n");
         return 0;
     }    
 
@@ -72,16 +72,10 @@ int main(int argc, char** argv){
     char* test_txt = argv[2];
     char* result_txt = argv[3];
 
-    //HMM_NUM = load_models(list_txt, hmms, MAX_HMM_NUM);
-    loadHMM(&hmms[0], "model_01.txt");
-    loadHMM(&hmms[1], "model_02.txt");
-    loadHMM(&hmms[2], "model_03.txt");
-    loadHMM(&hmms[3], "model_04.txt");
-    loadHMM(&hmms[4], "model_05.txt");
-    HMM_NUM = 5;
+    HMM_NUM = load_models(list_txt, hmms, MAX_HMM_NUM);
 
-    //for(int i=0;i<5;i++) dumpHMM(stderr, &hmms[i]);
-    fprintf(stderr, "models, load\n");
+    //for(int i=0;i<HMM_NUM;i++) dumpHMM(stderr, &hmms[i]);
+    
     testHMM(test_txt, result_txt);
 
     return 0;
