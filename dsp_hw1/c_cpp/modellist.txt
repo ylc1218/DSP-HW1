@@ -1,5 +1,5 @@
-models/model_01_2000.txt
-models/model_02_2000.txt
-models/model_03_2000.txt
-models/model_04_2000.txt
-models/model_05_2000.txt
+model_01.txt
+model_02.txt
+model_03.txt
+model_04.txt
+model_05.txt

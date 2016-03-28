@@ -38,7 +38,6 @@ double HMMProb(int hid, char*seq){
 }
 
 void testHMM(char *test_txt, char *result_txt){
-    fprintf(stderr, "inside testHMM\n");
     FILE *fp_test = open_or_die(test_txt, "r");
     FILE *fp_result = open_or_die(result_txt, "w");
 
@@ -78,7 +77,10 @@ int main(int argc, char** argv){
     
     FILE *fp_list = open_or_die(list_txt, "r");
     int i = 0;
-    while(fscanf(fp_list, "%s", name[i])) i++;
+    while(fscanf(fp_list, "%s", name[i])>0){
+        printf("name[%d] = %s\n", i, name[i]);
+        i++;
+    }
 
     //for(int i=0;i<HMM_NUM;i++) dumpHMM(stderr, &hmms[i]);
     
