@@ -7,6 +7,7 @@
 using namespace std;
 
 HMM hmms[MAX_HMM_NUM];
+char name[MAX_HMM_NUM][30];
 int HMM_NUM;
 
 double HMMProb(int hid, char*seq){
@@ -55,7 +56,8 @@ void testHMM(char *test_txt, char *result_txt){
             }
             //fprintf(fp_result, "%d %g\n", hid, prob);
         }
-        fprintf(fp_result, "model_0%d.txt\t%g\n", maxId+1, maxProb);
+        //fprintf(fp_result, "model_0%d.txt\t%g\n", maxId+1, maxProb);
+        fprintf(fp_result, "%s\t%g\n", name[maxId], maxProb);
     }
     fclose(fp_test);
     fclose(fp_result);
@@ -73,6 +75,10 @@ int main(int argc, char** argv){
     char* result_txt = argv[3];
 
     HMM_NUM = load_models(list_txt, hmms, MAX_HMM_NUM);
+    
+    FILE *fp_list = open_or_die(list_txt, "r");
+    int i = 0;
+    while(fscanf(fp_list, "%s", name[i])) i++;
 
     //for(int i=0;i<HMM_NUM;i++) dumpHMM(stderr, &hmms[i]);
     

@@ -32,10 +32,13 @@ void trainHmm(char* seq_model){
         T = strlen(seq)-1;
         N++;
         for(int t=0;t<T;t++) seq[t] -= 'A';
+            
         //calculate alpha
         double alpha[T][state_num];
-        for(int s=0;s<state_num;s++) //initial alpha
+        for(int s=0;s<state_num;s++){ //initial alpha
             alpha[0][s] = hmm.initial[s]*hmm.observation[seq[0]][s];
+            //printf("alpha[%d][%d] = %g\n",  0, s, alpha[0][s]);
+        }
 
         for(int t=1;t<T;t++){ //forward: for each time slice
             for(int s=0;s<state_num;s++){ //for each current state
@@ -44,18 +47,23 @@ void trainHmm(char* seq_model){
                     alpha[t][s] += alpha[t-1][ps]*hmm.transition[ps][s];
                 }
                 alpha[t][s] *= hmm.observation[seq[t]][s];
+                //printf("alpha[%d][%d] = %g\n", t, s, alpha[t][s]);
             }
         }
 
         //calculate beta
         double beta[T][state_num];
-        for(int s=0;s<state_num;s++) beta[T-1][s] = 1; //initial beta
+        for(int s=0;s<state_num;s++){
+            beta[T-1][s] = 1; //initial beta
+            //printf("beta[%d][%d] = %g\n", T-1, s, beta[T-1][s]);
+        }
 
         for(int t=T-2;t>=0;t--){//backward: for each time slice
             for(int s=0;s<state_num;s++){ //for each current state
                 beta[t][s] = 0;
                 for(int ns=0;ns<state_num;ns++) // for each next state
                     beta[t][s] += hmm.transition[s][ns]*hmm.observation[seq[t+1]][ns]*beta[t+1][ns];
+                //printf("beta[%d][%d] = %g\n", t, s, beta[t][s]);
             }
         }
 
@@ -70,6 +78,7 @@ void trainHmm(char* seq_model){
             for(int s=0;s<state_num;s++){
                 //calculate gamma
                 gamma[t][s] += sumArr[s]/sum;
+                //printf("gamma[%d][%d][%d] = %g\n", N-1, t, s, sumArr[s]/sum);
                 obsv_gamma[seq[t]][s] += sumArr[s]/sum;
                    
                 //calculate epsilon
